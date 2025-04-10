@@ -11,20 +11,19 @@ const server = net.createServer((socket) => {
     const firstLine = lines[0];
     const parts = firstLine.split(" ");
     const path = parts[1];
-    console.log(firstLine);
-    console.log(parts);
-    console.log(path);
-    if (path === "/") {
-      socket.write("HTTP/1.1 200 OK\r\n\r\n");
-    } else {
-      socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
+    let responseBody = "";
+    if (path.startsWith("/echo/")) {
+      responseBody = path.substring("/echo/".length);
+      console.log(responseBody);
     }
+    const contentLength = Buffer.byteLength(responseBody);
+    socket.write("HTTP/1.1 200 OK\r\n");
+    socket.write("Content-Type: text/plain\r\n");
+    socket.write(`Content-Length: ${contentLength}\r\n`);
+    socket.write("\r\n");
+    socket.write(responseBody);
     socket.end();
   });
-  // socket.write("HTTP/1.1 200 OK \r\n\r\n");
-  // socket.on("close", () => {
-  // socket.end();
-  // });
 });
 
 server.listen(4221, "localhost");
