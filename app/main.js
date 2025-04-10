@@ -12,15 +12,16 @@ const server = net.createServer((socket) => {
     const parts = firstLine.split(" ");
     const path = parts[1];
     let responseBody = "";
-    if (path.startsWith("/echo/")) {
+    if (path === "/") {
+      socket.write("HTTP/1.1 200 OK\r\nContent-length: 0\r\n\r\n");
+    } else if (path.startsWith("/echo/")) {
       responseBody = path.substring("/echo/".length);
       const contentLength = responseBody.length;
       socket.write(
         `HTTP/1.1 200 OK\r\nContent-type: text/plain\r\nContent-length: ${contentLength}\r\n\r\n${responseBody}`,
       );
     } else {
-      socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
-      socket.destroy();
+      socket.write("HTTP/1.1 404 Not Found\r\nContent-length: 0\r\n\r\n");
     }
   });
 
