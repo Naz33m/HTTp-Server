@@ -38,20 +38,32 @@ const server = net.createServer((socket) => {
       );
     } else if (path.startsWith("/files/")) {
       const filename = path.substring("/files/".length);
-
       const directory = process.argv[3];
-      console.log(directory);
-      fs.readFile(`${directory}/${filename}`, (err, data) => {
-        if (err) {
-          socket.write("HTTP/1.1 404 Not Found\r\nContent-length: 0\r\n\r\n");
-        } else {
-          const contentLength = data.length;
-          socket.write(
-            `HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${contentLength}\r\n\r\n`,
-          );
-          socket.write(data);
-        }
-      });
+      if (parts[0] === "POST" && path.startsWith("/files/")) {
+        let body = lines[lines.length - 1];
+        let contentLength = body.length;
+        fs.writeFile(`${directory}/${filename}`, body, (err) => {
+          if (err) {
+            socket.write(
+              "HTTP/1.1 500 Internal Server Error\r\nContent-length: 0\r\n\r\n",
+            );
+          } else {
+            socket.write(`HTTP/1.1 201 Created\r\n\r\n`);
+          }
+        });
+      } else {
+        fs.readFile(`${directory}/${filename}`, (err, data) => {
+          if (err) {
+            socket.write("HTTP/1.1 404 Not Found\r\nContent-length: 0\r\n\r\n");
+          } else {
+            const contentLength = data.length;
+            socket.write(
+              `HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ${contentLength}\r\n\r\n`,
+            );
+            socket.write(data);
+          }
+        });
+      }
     } else {
       socket.write("HTTP/1.1 404 Not Found\r\nContent-length: 0\r\n\r\n");
     }
