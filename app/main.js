@@ -1,6 +1,6 @@
 const net = require("net");
 const fs = require("fs");
-
+const zlib = require("zlib");
 // You can use print statements as follows for debugging, they'll be visible when running tests.
 console.log("Logs from your program will appear here!");
 
@@ -16,32 +16,43 @@ const server = net.createServer((socket) => {
     if (path === "/") {
       socket.write("HTTP/1.1 200 OK\r\nContent-length: 0\r\n\r\n");
     } else if (path.startsWith("/echo/")) {
-      responseBody = path.substring("/echo/".length);
-      console.log(lines[4]);
-      let acceptEncoding;
+      let responseBody = path.substring("/echo/".length);
+      let acceptEncoding = null;
+
       for (let i = 1; i < lines.length; i++) {
-        if (lines[i].toLowerCase().startsWith("accept-encoding:")) {
-          const encodings = lines[i]
+        const line = lines[i];
+        if (line === "") break;
+
+        if (line.toLowerCase().startsWith("accept-encoding:")) {
+          const encodings = line
             .split(":")[1]
             .trim()
             .split(",")
             .map((e) => e.trim());
+
           if (encodings.includes("gzip")) {
             acceptEncoding = "gzip";
           } else if (encodings.includes("deflate")) {
             acceptEncoding = "deflate";
           } else if (encodings.includes("br")) {
             acceptEncoding = "br";
-          } else {
-            acceptEncoding = "";
           }
           break;
         }
       }
-      const contentLength = responseBody.length;
-      socket.write(
-        `HTTP/1.1 200 OK\r\nContent-Encoding:${acceptEncoding && acceptEncoding}\r\nContent-type: text/plain\r\nContent-length: ${contentLength}\r\n\r\n${responseBody}`,
-      );
+      socket.write("HTTP/1.1 200 OK\r\n");
+      socket.write("Content-Type: text/plain\r\n");
+      if (acceptEncoding === "gzip") {
+        const compressedData = zlib.gzipSync(responseBody);
+        socket.write("Content-Encoding: gzip\r\n");
+        socket.write(`Content-Length: ${compressedData.length}\r\n`);
+        socket.write("\r\n");
+        socket.write(compressedData);
+      } else {
+        socket.write(`Content-Length: ${Buffer.byteLength(responseBody)}\r\n`);
+        socket.write("\r\n");
+        socket.write(responseBody);
+      }
     } else if (path.startsWith("/user-agent")) {
       const headers = {};
       for (let i = 1; i < lines.length; i++) {
