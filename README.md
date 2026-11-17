@@ -1,3 +1,10 @@
+# HTTp-Server
+
+An HTTP/1.1 server built on raw TCP sockets in Node.js, for the CodeCrafters "Build Your Own HTTP server" challenge. It parses requests by hand and handles `/echo/{text}` with gzip compression, `/user-agent`, file reads and writes under `/files`, and concurrent connections.
+
+---
+
+
 [![progress-banner](https://backend.codecrafters.io/progress/http-server/b6ca6351-c858-400d-b6fa-90388e56a5ed)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
 
 This is a starting point for JavaScript solutions to the
